@@ -3,27 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Proton — Security Research & Systems</title>
+  <title>Proton — Systems Engineer & Security Research</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #07080a;
-      --card-bg: rgba(14, 16, 22, 0.75);
+      --bg: #050608;
+      --card-bg: rgba(10, 12, 16, 0.7);
       --border: rgba(255, 255, 255, 0.08);
-      --accent: #22d3ee;
+      --accent: #38bdf8;
     }
     body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       background-color: var(--bg);
       color: #f1f5f9;
       overflow-x: hidden;
-      cursor: default;
+      cursor: none;
     }
-    .mono { font-family: 'Space Mono', monospace; }
+    .font-syne { font-family: 'Syne', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
 
     #webgl-canvas {
       position: fixed;
@@ -35,152 +36,166 @@
       pointer-events: auto;
     }
 
-    .glass-panel {
+    /* Custom Kinetic Cursor */
+    #cursor-dot {
+      position: fixed; top: 0; left: 0; width: 6px; height: 6px;
+      background: #38bdf8; border-radius: 50%; pointer-events: none;
+      z-index: 1000; transform: translate(-50%, -50%);
+    }
+    #cursor-ring {
+      position: fixed; top: 0; left: 0; width: 34px; height: 34px;
+      border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 50%;
+      pointer-events: none; z-index: 999; transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, border-color 0.2s;
+    }
+
+    .glass-box {
       background: var(--card-bg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
       border: 1px solid var(--border);
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .glass-panel:hover {
-      border-color: rgba(34, 211, 238, 0.35);
-      transform: translateY(-3px);
-      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+    .glass-box:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8);
     }
 
-    .noise {
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
-    }
-
-    /* Interactive Dot */
-    .status-ping {
-      box-shadow: 0 0 12px #22d3ee;
+    /* Subtle Scanline Texture */
+    .scanlines {
+      background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.3) 51%);
+      background-size: 100% 4px;
     }
   </style>
 </head>
-<body class="selection:bg-cyan-400 selection:text-black">
+<body class="selection:bg-sky-400 selection:text-black">
 
-  <!-- Background 3D WebGL Layer -->
+  <!-- Custom Magnetic Cursor -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- 3D Canvas -->
   <div id="webgl-canvas"></div>
 
-  <!-- Noise Texture Overlay -->
-  <div class="fixed inset-0 noise pointer-events-none z-[2]"></div>
+  <!-- Scanlines / Grain Layer -->
+  <div class="fixed inset-0 scanlines pointer-events-none z-[2] opacity-40"></div>
 
-  <!-- Foreground Application -->
+  <!-- Main Content Structure -->
   <div class="relative z-10 pointer-events-none">
 
-    <!-- Top Navigation Bar -->
-    <header class="fixed top-0 left-0 right-0 z-50 pointer-events-auto px-6 py-4 border-b border-white/5 bg-[#07080a]/60 backdrop-blur-xl">
+    <!-- Top Navigation -->
+    <header class="fixed top-0 left-0 right-0 z-50 pointer-events-auto px-6 py-5 border-b border-white/5 bg-[#050608]/80 backdrop-blur-xl">
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <span class="w-2 h-2 rounded-full bg-cyan-400 status-ping"></span>
-          <span class="mono text-xs font-bold tracking-widest uppercase text-white">PROTON // SYS-01</span>
+          <span class="w-2.5 h-2.5 rounded-sm bg-sky-400 animate-pulse"></span>
+          <span class="mono text-xs font-bold tracking-widest uppercase text-white">PROTON // LABS</span>
         </div>
 
         <nav class="hidden md:flex items-center space-x-8 mono text-xs uppercase tracking-wider text-slate-400">
-          <a href="#about" class="hover:text-cyan-400 transition" onclick="playBeep()">[01] Research</a>
-          <a href="#systems" class="hover:text-cyan-400 transition" onclick="playBeep()">[02] Systems</a>
-          <a href="#telemetry" class="hover:text-cyan-400 transition" onclick="playBeep()">[03] Telemetry</a>
+          <a href="#about" class="hover:text-sky-400 transition" onclick="sfxClick()">[01] Overview</a>
+          <a href="#systems" class="hover:text-sky-400 transition" onclick="sfxClick()">[02] Repositories</a>
+          <a href="#terminal" class="hover:text-sky-400 transition" onclick="toggleTerminal(); sfxClick();">[03] Terminal CLI</a>
         </nav>
 
-        <a href="mailto:contact@goonit.sbs" onclick="playBeep()" class="mono text-xs px-4 py-2 rounded-full border border-white/10 bg-white/5 text-slate-200 hover:border-cyan-400/50 hover:text-cyan-300 transition duration-200">
-          Direct Connect ↗
-        </a>
+        <button onclick="toggleTerminal(); sfxClick();" class="mono text-xs px-4 py-2 rounded border border-sky-500/30 bg-sky-950/20 text-sky-300 hover:bg-sky-400 hover:text-black transition">
+          CLI Shell (~/)
+        </button>
       </div>
     </header>
 
     <!-- Hero Stage -->
     <section class="min-h-screen flex flex-col justify-center px-6 md:px-16 max-w-7xl mx-auto">
-      <div class="max-w-3xl pointer-events-auto mt-20">
-        <div class="inline-flex items-center gap-2 mono text-xs px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.02] text-slate-400 mb-8">
-          <span class="text-cyan-400">⚡</span>
-          <span>KERNEL SPACE & V-TABLE HOOK RESEARCH</span>
+      <div class="max-w-3xl pointer-events-auto pt-20">
+        <div class="inline-flex items-center gap-2 mono text-[11px] px-3 py-1 rounded border border-white/10 bg-white/[0.02] text-slate-400 mb-6">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span>KERNEL SPACE & REVERSE ENGINEERING SPECIALIST</span>
         </div>
 
-        <h1 class="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight text-white leading-[1.02] mb-8">
-          Dissecting software at the byte level.
+        <h1 class="font-syne text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-tight text-white leading-[1.02] mb-8">
+          Architecting systems from the inside out.
         </h1>
 
         <p class="text-slate-400 text-lg md:text-xl font-normal leading-relaxed mb-10 max-w-2xl">
-          Engineered for low-level memory forensics, dynamic code injection, and security boundary evaluation. Operating directly on runtime architectures.
+          Deep research into dynamic process introspection, memory safety bypass diagnostics, and building minimal low-latency infrastructures.
         </p>
 
         <div class="flex flex-wrap items-center gap-4 mono text-xs">
-          <a href="#systems" onclick="playBeep()" class="px-7 py-3.5 bg-white text-black font-bold uppercase tracking-wider hover:bg-cyan-300 transition duration-150">
-            Inspect Systems ↓
+          <a href="#systems" onclick="sfxClick()" class="px-7 py-3.5 bg-white text-black font-bold uppercase tracking-wider hover:bg-sky-400 transition duration-150">
+            Explore Builds ↓
           </a>
-          <span class="text-slate-500 tracking-wider">
-            [ INTERACTIVE 3D SHADER: DRAG / ROTATE ]
-          </span>
+          <button onclick="toggleTerminal(); sfxClick();" class="px-7 py-3.5 border border-white/10 bg-white/5 text-slate-300 font-bold uppercase tracking-wider hover:border-white/30 transition">
+            Launch Shell
+          </button>
         </div>
       </div>
     </section>
 
     <!-- Engineering Systems / Work -->
-    <section id="systems" class="py-32 px-6 md:px-16 border-t border-white/5 bg-[#07080a]/80 backdrop-blur-2xl pointer-events-auto">
+    <section id="systems" class="py-32 px-6 md:px-16 border-t border-white/5 bg-[#050608]/85 backdrop-blur-2xl pointer-events-auto">
       <div class="max-w-7xl mx-auto">
         
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4">
           <div>
-            <span class="mono text-xs uppercase tracking-widest text-cyan-400 block mb-2">// Core Deployments</span>
-            <h2 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight">Active Builds & Frameworks</h2>
+            <span class="mono text-xs uppercase tracking-widest text-sky-400 block mb-2">// Active Works</span>
+            <h2 class="font-syne text-3xl md:text-5xl font-bold text-white tracking-tight">Engineered Solutions</h2>
           </div>
-          <span class="mono text-xs text-slate-500">REV: 2026.04 // BUILD: 9283</span>
+          <span class="mono text-xs text-slate-500">BUILD: VERIFIED // STABLE</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
           <!-- Card 1 -->
-          <div class="glass-panel p-8 rounded-2xl flex flex-col justify-between">
+          <div class="glass-box p-8 rounded-xl flex flex-col justify-between">
             <div>
               <div class="flex justify-between items-center mb-6 mono text-[11px] text-slate-500">
-                <span>SYS-MOD / 01</span>
-                <span class="text-cyan-400 font-bold">OPERATIONAL</span>
+                <span>RE-SYS / 01</span>
+                <span class="text-sky-400 font-bold">RELEASED</span>
               </div>
-              <h3 class="text-2xl font-bold text-white mb-3">V-Shadow Interceptor</h3>
+              <h3 class="font-syne text-2xl font-bold text-white mb-3">V-Shadow Runtime</h3>
               <p class="text-slate-400 text-sm leading-relaxed mb-8">
-                Runtime instrumentation framework utilizing hardware breakpoints and memory page redirection to bypass integrity scanners.
+                Runtime function hooking engine using virtual table shadowing to achieve non-invasive execution redirection.
               </p>
             </div>
             <div class="pt-6 border-t border-white/5 flex justify-between items-center mono text-xs text-slate-400">
               <span>C++20 / x86_64</span>
-              <span class="text-white">v2.1.0</span>
+              <span class="text-white hover:text-sky-400 transition cursor-pointer">Specs ↗</span>
             </div>
           </div>
 
           <!-- Card 2 -->
-          <div class="glass-panel p-8 rounded-2xl flex flex-col justify-between">
+          <div class="glass-box p-8 rounded-xl flex flex-col justify-between">
             <div>
               <div class="flex justify-between items-center mb-6 mono text-[11px] text-slate-500">
-                <span>NET-DIAG / 02</span>
-                <span class="text-cyan-400 font-bold">MONITORING</span>
+                <span>SEC-DIAG / 02</span>
+                <span class="text-sky-400 font-bold">MONITORING</span>
               </div>
-              <h3 class="text-2xl font-bold text-white mb-3">Specter Recon Hub</h3>
+              <h3 class="font-syne text-2xl font-bold text-white mb-3">Specter Recon</h3>
               <p class="text-slate-400 text-sm leading-relaxed mb-8">
-                Asynchronous vulnerability diagnostic engine parsing raw network frames to isolate unauthenticated RPC exposure.
+                Asynchronous network mapping engine leveraging raw socket injection for rapid attack-surface discovery.
               </p>
             </div>
             <div class="pt-6 border-t border-white/5 flex justify-between items-center mono text-xs text-slate-400">
               <span>Python / Libpcap</span>
-              <span class="text-white">Active</span>
+              <span class="text-white hover:text-sky-400 transition cursor-pointer">Specs ↗</span>
             </div>
           </div>
 
           <!-- Card 3 -->
-          <div class="glass-panel p-8 rounded-2xl flex flex-col justify-between">
+          <div class="glass-box p-8 rounded-xl flex flex-col justify-between">
             <div>
               <div class="flex justify-between items-center mb-6 mono text-[11px] text-slate-500">
-                <span>DIST-CORE / 03</span>
-                <span class="text-cyan-400 font-bold">DEPLOYED</span>
+                <span>INFRA / 03</span>
+                <span class="text-sky-400 font-bold">DEPLOYED</span>
               </div>
-              <h3 class="text-2xl font-bold text-white mb-3">GoonIT Edge Kernel</h3>
+              <h3 class="font-syne text-2xl font-bold text-white mb-3">GoonIT Core</h3>
               <p class="text-slate-400 text-sm leading-relaxed mb-8">
-                Zero-cold-start edge router enforcing encrypted token handshakes with guaranteed sub-5ms packet transport.
+                Ultra-compact edge middleware delivering hardened token validations with sub-5ms packet transport guarantees.
               </p>
             </div>
             <div class="pt-6 border-t border-white/5 flex justify-between items-center mono text-xs text-slate-400">
               <span>TypeScript / Edge</span>
-              <span class="text-white">Cluster</span>
+              <span class="text-white hover:text-sky-400 transition cursor-pointer">Specs ↗</span>
             </div>
           </div>
 
@@ -188,70 +203,162 @@
       </div>
     </section>
 
-    <!-- Deep Telemetry / Disciplines -->
-    <section id="telemetry" class="py-28 px-6 md:px-16 border-t border-white/5 bg-[#07080a] pointer-events-auto">
-      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
-        
-        <div class="md:col-span-4">
-          <span class="mono text-xs uppercase tracking-widest text-cyan-400 block mb-2">// Focus</span>
-          <h2 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-4">Core Research Vector</h2>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            Direct reverse engineering and runtime memory diagnostics conducted on proprietary architectures.
-          </p>
-        </div>
-
-        <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-8">
-          <div class="p-6 rounded-xl border border-white/5 bg-white/[0.01]">
-            <h4 class="text-white font-bold text-base mb-2 mono">01 // Memory Dissection</h4>
-            <p class="text-sm text-slate-400 leading-relaxed">
-              Automated pattern scanning, structure offset reconstruction, and dynamic signature generation in stripped executables.
-            </p>
+    <!-- Terminal Drawer Shell -->
+    <div id="terminal-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md hidden pointer-events-auto">
+      <div class="w-full max-w-2xl bg-[#090b10] border border-sky-500/40 rounded-lg shadow-2xl overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 bg-[#0d1017] border-b border-white/5">
+          <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block cursor-pointer" onclick="toggleTerminal()"></span>
+            <span class="w-3 h-3 rounded-full bg-yellow-500/80 inline-block"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+            <span class="mono text-xs text-slate-400 ml-2">bash - proton@goonit.sbs: ~</span>
           </div>
-
-          <div class="p-6 rounded-xl border border-white/5 bg-white/[0.01]">
-            <h4 class="text-white font-bold text-base mb-2 mono">02 // Runtime Hooking</h4>
-            <p class="text-sm text-slate-400 leading-relaxed">
-              Virtual method table shadowing, inline assembly trampolines, and safe payload execution inside foreign memory spaces.
-            </p>
-          </div>
+          <span class="mono text-[10px] text-slate-500">ESC to exit</span>
         </div>
-
+        <div id="terminal-output" class="p-4 mono text-xs h-72 overflow-y-auto space-y-2 text-slate-300">
+          <div>Proton Interactive Shell [Version 1.0.4]</div>
+          <div>Type <span class="text-sky-400 font-bold">'help'</span> to see available system commands.</div>
+        </div>
+        <div class="flex items-center px-4 py-3 bg-[#07080c] border-t border-white/5">
+          <span class="mono text-xs text-sky-400 mr-2">guest@proton:~$</span>
+          <input id="terminal-input" type="text" class="w-full bg-transparent mono text-xs text-white focus:outline-none" autofocus />
+        </div>
       </div>
-    </section>
+    </div>
 
     <!-- Footer -->
-    <footer class="py-12 px-6 border-t border-white/5 bg-[#07080a] pointer-events-auto mono text-xs text-slate-600">
+    <footer class="py-12 px-6 border-t border-white/5 bg-[#050608] pointer-events-auto mono text-xs text-slate-600">
       <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div>PROTONYT // GOONIT.SBS // ALL CHANNELS SECURED</div>
-        <div>LATENCY: 0.2ms // RENDER: THREEJS GLSL CHROME</div>
+        <div>PROTONYT // GOONIT.SBS // ALL CHANNELS ENCRYPTED</div>
+        <div>HARDWARE-ACCELERATED THREEJS ENGINE</div>
       </div>
     </footer>
 
   </div>
 
-  <!-- Interactive Audio Feedback (Web Audio API) -->
+  <!-- Audio Synthesis -->
   <script>
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playBeep() {
+    function sfxClick() {
       if (audioCtx.state === 'suspended') audioCtx.resume();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(640, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.08);
+      osc.stop(audioCtx.currentTime + 0.05);
     }
   </script>
 
-  <!-- High-End 3D WebGL Shader Simulation -->
+  <!-- Interactive Terminal Engine -->
+  <script>
+    const termModal = document.getElementById('terminal-modal');
+    const termInput = document.getElementById('terminal-input');
+    const termOutput = document.getElementById('terminal-output');
+
+    function toggleTerminal() {
+      termModal.classList.toggle('hidden');
+      if (!termModal.classList.contains('hidden')) {
+        setTimeout(() => termInput.focus(), 100);
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === '`' || e.key === '~') {
+        toggleTerminal();
+      }
+      if (e.key === 'Escape' && !termModal.classList.contains('hidden')) {
+        toggleTerminal();
+      }
+    });
+
+    termInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const cmd = termInput.value.trim().toLowerCase();
+        printTerminalLine(`guest@proton:~$ ${termInput.value}`);
+        termInput.value = '';
+        executeCmd(cmd);
+      }
+    });
+
+    function printTerminalLine(text, isMarkup = false) {
+      const line = document.createElement('div');
+      if (isMarkup) line.innerHTML = text;
+      else line.textContent = text;
+      termOutput.appendChild(line);
+      termOutput.scrollTop = termOutput.scrollHeight;
+    }
+
+    function executeCmd(cmd) {
+      sfxClick();
+      switch(cmd) {
+        case 'help':
+          printTerminalLine("Available commands: <span class='text-sky-300'>skills</span>, <span class='text-sky-300'>projects</span>, <span class='text-sky-300'>clear</span>, <span class='text-sky-300'>contact</span>, <span class='text-sky-300'>exit</span>", true);
+          break;
+        case 'skills':
+          printTerminalLine("Expertise: Reverse Engineering, V-Table Hooking, C/C++, Memory Forensics, Assembly x64.");
+          break;
+        case 'projects':
+          printTerminalLine("1. V-Shadow (Dynamic C++ Hooking)<br>2. Specter Recon (Raw Sockets Discovery)<br>3. GoonIT Core (Sub-5ms Edge)", true);
+          break;
+        case 'contact':
+          printTerminalLine("Direct Email: contact@goonit.sbs");
+          break;
+        case 'clear':
+          termOutput.innerHTML = '';
+          break;
+        case 'exit':
+          toggleTerminal();
+          break;
+        default:
+          printTerminalLine(`Command not recognized: '${cmd}'. Type 'help' for options.`);
+      }
+    }
+  </script>
+
+  <!-- Kinetic Custom Cursor -->
+  <script>
+    const dot = document.getElementById('cursor-dot');
+    const ring = document.getElementById('cursor-ring');
+    let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    let ringPos = { x: mouse.x, y: mouse.y };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      dot.style.transform = `translate(${mouse.x}px, ${mouse.y}px)`;
+    });
+
+    function updateCursor() {
+      ringPos.x += (mouse.x - ringPos.x) * 0.15;
+      ringPos.y += (mouse.y - ringPos.y) * 0.15;
+      ring.style.transform = `translate(${ringPos.x}px, ${ringPos.y}px)`;
+      requestAnimationFrame(updateCursor);
+    }
+    updateCursor();
+
+    document.querySelectorAll('a, button, .glass-box').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        ring.style.width = '55px';
+        ring.style.height = '55px';
+        ring.style.borderColor = '#38bdf8';
+      });
+      el.addEventListener('mouseleave', () => {
+        ring.style.width = '34px';
+        ring.style.height = '34px';
+        ring.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+      });
+    });
+  </script>
+
+  <!-- 3D Polyhedral Monolith -->
   <script>
     const container = document.getElementById('webgl-canvas');
-
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(0, 0, 7.5);
@@ -259,145 +366,87 @@
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
     container.appendChild(renderer.domElement);
 
-    // High detail Icosahedron for dynamic liquid displacement
-    const geometry = new THREE.IcosahedronGeometry(1.7, 45);
-
-    // Dynamic Shader simulating liquid mercury / fluid chrome
+    // Dynamic Geometry: Multi-faceted Icosahedron Monolith
+    const geometry = new THREE.IcosahedronGeometry(1.9, 0);
     const material = new THREE.MeshStandardMaterial({
-      color: 0xcccccc,
-      metalness: 0.98,
-      roughness: 0.12,
-      wireframe: false,
+      color: 0x0f172a,
+      roughness: 0.1,
+      metalness: 0.95,
+      flatShading: true,
     });
+    const monolith = new THREE.Mesh(geometry, material);
 
-    const mesh = new THREE.Mesh(geometry, material);
-    
-    // Position dynamically based on screen size
-    function alignMesh() {
-      if (window.innerWidth > 900) {
-        mesh.position.set(2.2, 0, 0);
-      } else {
-        mesh.position.set(0, 1.2, -1);
-      }
+    // Outer Wireframe Cage
+    const wireGeo = new THREE.IcosahedronGeometry(2.1, 0);
+    const wireMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.2
+    });
+    const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+    monolith.add(wireMesh);
+
+    function updateObjectPos() {
+      if (window.innerWidth > 900) monolith.position.set(2.4, 0, 0);
+      else monolith.position.set(0, 1.2, -1);
     }
-    alignMesh();
-    scene.add(mesh);
+    updateObjectPos();
+    scene.add(monolith);
 
-    // Studio Lighting Array
-    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
-    scene.add(ambient);
+    // Studio Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+    const light1 = new THREE.DirectionalLight(0x38bdf8, 3.5);
+    light1.position.set(5, 5, 5);
+    scene.add(light1);
 
-    const keyLight = new THREE.DirectionalLight(0x22d3ee, 3.5);
-    keyLight.position.set(5, 5, 4);
-    scene.add(keyLight);
+    const light2 = new THREE.PointLight(0x818cf8, 4.0, 20);
+    light2.position.set(-6, -4, -2);
+    scene.add(light2);
 
-    const rimLight = new THREE.PointLight(0xffffff, 4.0, 25);
-    rimLight.position.set(-6, -4, 2);
-    scene.add(rimLight);
-
-    const accentLight = new THREE.PointLight(0x38bdf8, 2.5, 20);
-    accentLight.position.set(0, 6, -3);
-    scene.add(accentLight);
-
-    // Store original vertex coordinates for liquid wave calculation
-    const originalPositions = geometry.attributes.position.clone();
-    const posAttr = geometry.attributes.position;
-    const vertexCount = posAttr.count;
-
-    // Interactive Drag Mechanics
-    let isDragging = false;
-    let prevMouse = { x: 0, y: 0 };
-    let mouseDelta = { x: 0, y: 0 };
+    // Inertia Interaction
+    let dragging = false;
+    let prev = { x: 0, y: 0 };
+    let vel = { x: 0.003, y: 0.004 };
 
     window.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      prevMouse = { x: e.clientX, y: e.clientY };
+      dragging = true;
+      prev = { x: e.clientX, y: e.clientY };
     });
-
     window.addEventListener('mousemove', (e) => {
-      const dx = e.clientX - prevMouse.x;
-      const dy = e.clientY - prevMouse.y;
-      
-      if (isDragging) {
-        mesh.rotation.y += dx * 0.007;
-        mesh.rotation.x += dy * 0.007;
-        mouseDelta.x = dx * 0.004;
-        mouseDelta.y = dy * 0.004;
-        prevMouse = { x: e.clientX, y: e.clientY };
-      }
-      
-      // Dynamic light tracking with cursor
-      keyLight.position.x = (e.clientX / window.innerWidth - 0.5) * 10 + 4;
-      keyLight.position.y = -(e.clientY / window.innerHeight - 0.5) * 10 + 4;
-    });
-
-    window.addEventListener('mouseup', () => { isDragging = false; });
-
-    // Touch Support
-    window.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    });
-    window.addEventListener('touchmove', (e) => {
-      if (isDragging) {
-        const dx = e.touches[0].clientX - prevMouse.x;
-        const dy = e.touches[0].clientY - prevMouse.y;
-        mesh.rotation.y += dx * 0.007;
-        mesh.rotation.x += dy * 0.007;
-        prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      if (dragging) {
+        const dx = e.clientX - prev.x;
+        const dy = e.clientY - prev.y;
+        monolith.rotation.y += dx * 0.008;
+        monolith.rotation.x += dy * 0.008;
+        vel.y = dx * 0.005;
+        vel.x = dy * 0.005;
+        prev = { x: e.clientX, y: e.clientY };
       }
     });
-    window.addEventListener('touchend', () => { isDragging = false; });
+    window.addEventListener('mouseup', () => dragging = false);
 
-    // Resize Handler
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      alignMesh();
+      updateObjectPos();
     });
 
-    // Clock & Wave Physics Loop
-    const clock = new THREE.Clock();
-
-    function renderFrame() {
-      requestAnimationFrame(renderFrame);
-      const time = clock.getElapsedTime() * 1.5;
-
-      // Real-time procedural liquid surface wave calculation
-      for (let i = 0; i < vertexCount; i++) {
-        const uX = originalPositions.getX(i);
-        const uY = originalPositions.getY(i);
-        const uZ = originalPositions.getZ(i);
-
-        // Sinusoidal wave ripple
-        const displacement = Math.sin(uX * 2.5 + time) * 
-                             Math.cos(uY * 2.5 + time) * 
-                             Math.sin(uZ * 2.5 + time) * 0.12;
-
-        posAttr.setXYZ(
-          i,
-          uX + (uX * displacement),
-          uY + (uY * displacement),
-          uZ + (uZ * displacement)
-        );
+    function loop() {
+      requestAnimationFrame(loop);
+      if (!dragging) {
+        monolith.rotation.y += vel.y;
+        monolith.rotation.x += vel.x;
+        vel.x += (0.002 - vel.x) * 0.05;
+        vel.y += (0.003 - vel.y) * 0.05;
       }
-      posAttr.needsUpdate = true;
-      geometry.computeVertexNormals();
-
-      // Idle Rotation Inertia
-      if (!isDragging) {
-        mesh.rotation.y += 0.003;
-        mesh.rotation.x += 0.0015;
-      }
-
+      wireMesh.rotation.y -= 0.002;
       renderer.render(scene, camera);
     }
-    renderFrame();
+    loop();
   </script>
 </body>
 </html>
