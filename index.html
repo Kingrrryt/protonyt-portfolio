@@ -3,159 +3,184 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Proton — Reverse Engineering & Systems</title>
+  <title>Proton — Security Research & Systems</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090a0f;
-      --card: #0f1118;
+      --bg: #07080a;
+      --card-bg: rgba(14, 16, 22, 0.75);
       --border: rgba(255, 255, 255, 0.08);
+      --accent: #22d3ee;
     }
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       background-color: var(--bg);
-      color: #e4e4e7;
+      color: #f1f5f9;
       overflow-x: hidden;
+      cursor: default;
     }
     .mono { font-family: 'Space Mono', monospace; }
-    
-    #canvas-wrap {
+
+    #webgl-canvas {
       position: fixed;
       top: 0;
-      right: 0;
+      left: 0;
       width: 100vw;
       height: 100vh;
       z-index: 1;
       pointer-events: auto;
     }
 
-    .editorial-border {
+    .glass-panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--border);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-panel:hover {
+      border-color: rgba(34, 211, 238, 0.35);
+      transform: translateY(-3px);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
     }
 
-    .project-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      transition: border-color 0.2s ease, transform 0.2s ease;
-    }
-    .project-card:hover {
-      border-color: rgba(255, 255, 255, 0.25);
-      transform: translateY(-2px);
+    .noise {
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
     }
 
-    .drag-hint {
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.9; }
+    /* Interactive Dot */
+    .status-ping {
+      box-shadow: 0 0 12px #22d3ee;
     }
   </style>
 </head>
-<body class="selection:bg-white selection:text-black">
+<body class="selection:bg-cyan-400 selection:text-black">
 
-  <!-- 3D Interactive WebGL Layer -->
-  <div id="canvas-wrap"></div>
+  <!-- Background 3D WebGL Layer -->
+  <div id="webgl-canvas"></div>
 
-  <!-- Foreground Content -->
+  <!-- Noise Texture Overlay -->
+  <div class="fixed inset-0 noise pointer-events-none z-[2]"></div>
+
+  <!-- Foreground Application -->
   <div class="relative z-10 pointer-events-none">
-    
-    <!-- Minimalist Nav -->
-    <header class="fixed top-0 left-0 right-0 z-50 pointer-events-auto px-6 py-5 border-b border-white/5 bg-[#090a0f]/60 backdrop-blur-xl">
+
+    <!-- Top Navigation Bar -->
+    <header class="fixed top-0 left-0 right-0 z-50 pointer-events-auto px-6 py-4 border-b border-white/5 bg-[#07080a]/60 backdrop-blur-xl">
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <span class="w-2 h-2 bg-white rounded-full"></span>
-          <span class="mono text-xs tracking-widest uppercase font-bold text-white">PROTON / 01</span>
+          <span class="w-2 h-2 rounded-full bg-cyan-400 status-ping"></span>
+          <span class="mono text-xs font-bold tracking-widest uppercase text-white">PROTON // SYS-01</span>
         </div>
-        <div class="flex items-center space-x-8 mono text-xs uppercase tracking-wider text-zinc-400">
-          <a href="#work" class="hover:text-white transition">Work</a>
-          <a href="#about" class="hover:text-white transition">Research</a>
-          <a href="mailto:contact@goonit.sbs" class="text-white hover:opacity-75 transition underline underline-offset-4">Connect</a>
-        </div>
+
+        <nav class="hidden md:flex items-center space-x-8 mono text-xs uppercase tracking-wider text-slate-400">
+          <a href="#about" class="hover:text-cyan-400 transition" onclick="playBeep()">[01] Research</a>
+          <a href="#systems" class="hover:text-cyan-400 transition" onclick="playBeep()">[02] Systems</a>
+          <a href="#telemetry" class="hover:text-cyan-400 transition" onclick="playBeep()">[03] Telemetry</a>
+        </nav>
+
+        <a href="mailto:contact@goonit.sbs" onclick="playBeep()" class="mono text-xs px-4 py-2 rounded-full border border-white/10 bg-white/5 text-slate-200 hover:border-cyan-400/50 hover:text-cyan-300 transition duration-200">
+          Direct Connect ↗
+        </a>
       </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="min-h-screen flex flex-col justify-end pb-24 px-6 md:px-16 max-w-7xl mx-auto">
-      <div class="max-w-2xl pointer-events-auto">
-        <div class="mono text-xs text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-          <span>[ INDEPENDENT RESEARCHER ]</span>
-          <span>•</span>
-          <span class="text-zinc-400">SYSTEMS ARCHITECTURE</span>
+    <!-- Hero Stage -->
+    <section class="min-h-screen flex flex-col justify-center px-6 md:px-16 max-w-7xl mx-auto">
+      <div class="max-w-3xl pointer-events-auto mt-20">
+        <div class="inline-flex items-center gap-2 mono text-xs px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.02] text-slate-400 mb-8">
+          <span class="text-cyan-400">⚡</span>
+          <span>KERNEL SPACE & V-TABLE HOOK RESEARCH</span>
         </div>
-        
-        <h1 class="text-4xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-white leading-[1.08] mb-6">
-          Low-level software, binary analysis, & memory security.
+
+        <h1 class="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight text-white leading-[1.02] mb-8">
+          Dissecting software at the byte level.
         </h1>
 
-        <p class="text-zinc-400 text-base md:text-lg leading-relaxed mb-8 max-w-xl font-normal">
-          Focused on virtual table mechanics, process introspection, dynamic instrumentation, and building robust reverse engineering workflows.
+        <p class="text-slate-400 text-lg md:text-xl font-normal leading-relaxed mb-10 max-w-2xl">
+          Engineered for low-level memory forensics, dynamic code injection, and security boundary evaluation. Operating directly on runtime architectures.
         </p>
 
-        <div class="flex items-center gap-4 mono text-xs">
-          <a href="#work" class="px-5 py-3 bg-white text-black font-bold uppercase tracking-wider hover:bg-zinc-200 transition">
-            View Research ↓
+        <div class="flex flex-wrap items-center gap-4 mono text-xs">
+          <a href="#systems" onclick="playBeep()" class="px-7 py-3.5 bg-white text-black font-bold uppercase tracking-wider hover:bg-cyan-300 transition duration-150">
+            Inspect Systems ↓
           </a>
-          <div class="drag-hint text-zinc-500 tracking-wider">
-            [ DRAG OBJECT TO INSPECT ]
-          </div>
+          <span class="text-slate-500 tracking-wider">
+            [ INTERACTIVE 3D SHADER: DRAG / ROTATE ]
+          </span>
         </div>
       </div>
     </section>
 
-    <!-- Work / Projects Section -->
-    <section id="work" class="py-28 px-6 md:px-16 border-t border-white/5 bg-[#090a0f]/90 backdrop-blur-2xl pointer-events-auto">
+    <!-- Engineering Systems / Work -->
+    <section id="systems" class="py-32 px-6 md:px-16 border-t border-white/5 bg-[#07080a]/80 backdrop-blur-2xl pointer-events-auto">
       <div class="max-w-7xl mx-auto">
-        <div class="flex justify-between items-baseline mb-16">
-          <h2 class="text-2xl font-bold tracking-tight text-white">Selected Engineering</h2>
-          <span class="mono text-xs text-zinc-500 uppercase">2025 — Present</span>
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4">
+          <div>
+            <span class="mono text-xs uppercase tracking-widest text-cyan-400 block mb-2">// Core Deployments</span>
+            <h2 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight">Active Builds & Frameworks</h2>
+          </div>
+          <span class="mono text-xs text-slate-500">REV: 2026.04 // BUILD: 9283</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          <div class="project-card p-7 flex flex-col justify-between">
+
+          <!-- Card 1 -->
+          <div class="glass-panel p-8 rounded-2xl flex flex-col justify-between">
             <div>
-              <div class="mono text-[11px] text-zinc-500 mb-6 uppercase">01 / Low-Level Hooking</div>
-              <h3 class="text-xl font-semibold text-white mb-3 tracking-tight">V-Shadow Core</h3>
-              <p class="text-zinc-400 text-sm leading-relaxed mb-8">
-                Non-invasive dynamic runtime interception engine using copy-on-write virtual table shadowing techniques.
+              <div class="flex justify-between items-center mb-6 mono text-[11px] text-slate-500">
+                <span>SYS-MOD / 01</span>
+                <span class="text-cyan-400 font-bold">OPERATIONAL</span>
+              </div>
+              <h3 class="text-2xl font-bold text-white mb-3">V-Shadow Interceptor</h3>
+              <p class="text-slate-400 text-sm leading-relaxed mb-8">
+                Runtime instrumentation framework utilizing hardware breakpoints and memory page redirection to bypass integrity scanners.
               </p>
             </div>
-            <div class="pt-6 border-t border-white/5 flex justify-between items-center mono text-xs text-zinc-500">
+            <div class="pt-6 border-t border-white/5 flex justify-between items-center mono text-xs text-slate-400">
               <span>C++20 / x86_64</span>
-              <span class="text-white">Internal Release</span>
+              <span class="text-white">v2.1.0</span>
             </div>
           </div>
 
-          <div class="project-card p-7 flex flex-col justify-between">
+          <!-- Card 2 -->
+          <div class="glass-panel p-8 rounded-2xl flex flex-col justify-between">
             <div>
-              <div class="mono text-[11px] text-zinc-500 mb-6 uppercase">02 / Network Diagnostics</div>
-              <h3 class="text-xl font-semibold text-white mb-3 tracking-tight">Specter-Recon</h3>
-              <p class="text-zinc-400 text-sm leading-relaxed mb-8">
-                Asynchronous vulnerability scanner utilizing raw sockets for stealthy host mapping and state evaluation.
+              <div class="flex justify-between items-center mb-6 mono text-[11px] text-slate-500">
+                <span>NET-DIAG / 02</span>
+                <span class="text-cyan-400 font-bold">MONITORING</span>
+              </div>
+              <h3 class="text-2xl font-bold text-white mb-3">Specter Recon Hub</h3>
+              <p class="text-slate-400 text-sm leading-relaxed mb-8">
+                Asynchronous vulnerability diagnostic engine parsing raw network frames to isolate unauthenticated RPC exposure.
               </p>
             </div>
-            <div class="pt-6 border-t border-white/5 flex justify-between items-center mono text-xs text-zinc-500">
+            <div class="pt-6 border-t border-white/5 flex justify-between items-center mono text-xs text-slate-400">
               <span>Python / Libpcap</span>
-              <span class="text-white">Active Build</span>
+              <span class="text-white">Active</span>
             </div>
           </div>
 
-          <div class="project-card p-7 flex flex-col justify-between">
+          <!-- Card 3 -->
+          <div class="glass-panel p-8 rounded-2xl flex flex-col justify-between">
             <div>
-              <div class="mono text-[11px] text-zinc-500 mb-6 uppercase">03 / Platform Infra</div>
-              <h3 class="text-xl font-semibold text-white mb-3 tracking-tight">GoonIT Core</h3>
-              <p class="text-zinc-400 text-sm leading-relaxed mb-8">
-                Minimalist edge middleware pipeline featuring sub-10ms response constraints and hardened auth gates.
+              <div class="flex justify-between items-center mb-6 mono text-[11px] text-slate-500">
+                <span>DIST-CORE / 03</span>
+                <span class="text-cyan-400 font-bold">DEPLOYED</span>
+              </div>
+              <h3 class="text-2xl font-bold text-white mb-3">GoonIT Edge Kernel</h3>
+              <p class="text-slate-400 text-sm leading-relaxed mb-8">
+                Zero-cold-start edge router enforcing encrypted token handshakes with guaranteed sub-5ms packet transport.
               </p>
             </div>
-            <div class="pt-6 border-t border-white/5 flex justify-between items-center mono text-xs text-zinc-500">
-              <span>Rust / Vercel Edge</span>
-              <span class="text-white">Deployed</span>
+            <div class="pt-6 border-t border-white/5 flex justify-between items-center mono text-xs text-slate-400">
+              <span>TypeScript / Edge</span>
+              <span class="text-white">Cluster</span>
             </div>
           </div>
 
@@ -163,92 +188,130 @@
       </div>
     </section>
 
-    <!-- Capabilities / About -->
-    <section id="about" class="py-24 px-6 md:px-16 border-t border-white/5 bg-[#090a0f] pointer-events-auto">
-      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12">
+    <!-- Deep Telemetry / Disciplines -->
+    <section id="telemetry" class="py-28 px-6 md:px-16 border-t border-white/5 bg-[#07080a] pointer-events-auto">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
+        
         <div class="md:col-span-4">
-          <span class="mono text-xs uppercase text-zinc-500 tracking-widest block mb-2">// Focus</span>
-          <h2 class="text-3xl font-bold tracking-tight text-white">Disciplines</h2>
+          <span class="mono text-xs uppercase tracking-widest text-cyan-400 block mb-2">// Focus</span>
+          <h2 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-4">Core Research Vector</h2>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            Direct reverse engineering and runtime memory diagnostics conducted on proprietary architectures.
+          </p>
         </div>
-        <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-8 text-sm text-zinc-400">
-          <div>
-            <h4 class="text-white font-medium mb-2 mono uppercase text-xs tracking-wider">Memory Introspection</h4>
-            <p class="leading-relaxed">Analyzing memory regions, tracing execution flows, and dissecting proprietary binaries using disassemblers and debuggers.</p>
+
+        <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div class="p-6 rounded-xl border border-white/5 bg-white/[0.01]">
+            <h4 class="text-white font-bold text-base mb-2 mono">01 // Memory Dissection</h4>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              Automated pattern scanning, structure offset reconstruction, and dynamic signature generation in stripped executables.
+            </p>
           </div>
-          <div>
-            <h4 class="text-white font-medium mb-2 mono uppercase text-xs tracking-wider">Systems Programming</h4>
-            <p class="leading-relaxed">Developing low-overhead system libraries, native hooks, and security testing toolkits in C++ and Assembly.</p>
+
+          <div class="p-6 rounded-xl border border-white/5 bg-white/[0.01]">
+            <h4 class="text-white font-bold text-base mb-2 mono">02 // Runtime Hooking</h4>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              Virtual method table shadowing, inline assembly trampolines, and safe payload execution inside foreign memory spaces.
+            </p>
           </div>
         </div>
+
       </div>
     </section>
 
-    <!-- Minimal Footer -->
-    <footer class="py-12 px-6 border-t border-white/5 mono text-xs text-zinc-600 pointer-events-auto">
+    <!-- Footer -->
+    <footer class="py-12 px-6 border-t border-white/5 bg-[#07080a] pointer-events-auto mono text-xs text-slate-600">
       <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div>PROTONYT • GOONIT.SBS • 2026</div>
-        <div>RENDER: HARDWARE_ACCELERATED_PBR</div>
+        <div>PROTONYT // GOONIT.SBS // ALL CHANNELS SECURED</div>
+        <div>LATENCY: 0.2ms // RENDER: THREEJS GLSL CHROME</div>
       </div>
     </footer>
 
   </div>
 
-  <!-- Realistic Metallic 3D Engine -->
+  <!-- Interactive Audio Feedback (Web Audio API) -->
   <script>
-    const container = document.getElementById('canvas-wrap');
-    
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(640, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.08);
+    }
+  </script>
+
+  <!-- High-End 3D WebGL Shader Simulation -->
+  <script>
+    const container = document.getElementById('webgl-canvas');
+
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(2, 0.5, 7.5);
+    const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0, 7.5);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.1;
     container.appendChild(renderer.domElement);
 
-    // Realistic Chrome/Titanium Torus Knot
-    const geometry = new THREE.TorusKnotGeometry(1.4, 0.42, 220, 36, 2, 3);
+    // High detail Icosahedron for dynamic liquid displacement
+    const geometry = new THREE.IcosahedronGeometry(1.7, 45);
+
+    // Dynamic Shader simulating liquid mercury / fluid chrome
     const material = new THREE.MeshStandardMaterial({
-      color: 0xd8d8db,
-      metalness: 0.95,
-      roughness: 0.18,
-      wireframe: false
+      color: 0xcccccc,
+      metalness: 0.98,
+      roughness: 0.12,
+      wireframe: false,
     });
+
     const mesh = new THREE.Mesh(geometry, material);
     
-    // Position slightly to the right side of the screen
-    function updateMeshPosition() {
-      if (window.innerWidth > 768) {
-        mesh.position.set(2.2, 0.2, 0);
+    // Position dynamically based on screen size
+    function alignMesh() {
+      if (window.innerWidth > 900) {
+        mesh.position.set(2.2, 0, 0);
       } else {
-        mesh.position.set(0, 1.2, 0);
+        mesh.position.set(0, 1.2, -1);
       }
     }
-    updateMeshPosition();
+    alignMesh();
     scene.add(mesh);
 
-    // Dynamic Studio Lighting for Realistic Reflections
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
+    // Studio Lighting Array
+    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambient);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
-    keyLight.position.set(5, 8, 5);
+    const keyLight = new THREE.DirectionalLight(0x22d3ee, 3.5);
+    keyLight.position.set(5, 5, 4);
     scene.add(keyLight);
 
-    const rimLight = new THREE.PointLight(0x71717a, 4.5, 20);
-    rimLight.position.set(-6, -4, -4);
+    const rimLight = new THREE.PointLight(0xffffff, 4.0, 25);
+    rimLight.position.set(-6, -4, 2);
     scene.add(rimLight);
 
-    const accentLight = new THREE.PointLight(0xa1a1aa, 2.0, 15);
-    accentLight.position.set(0, 5, -2);
+    const accentLight = new THREE.PointLight(0x38bdf8, 2.5, 20);
+    accentLight.position.set(0, 6, -3);
     scene.add(accentLight);
 
-    // Interactive Drag Physics
+    // Store original vertex coordinates for liquid wave calculation
+    const originalPositions = geometry.attributes.position.clone();
+    const posAttr = geometry.attributes.position;
+    const vertexCount = posAttr.count;
+
+    // Interactive Drag Mechanics
     let isDragging = false;
     let prevMouse = { x: 0, y: 0 };
-    let rotationVelocity = { x: 0.003, y: 0.005 };
+    let mouseDelta = { x: 0, y: 0 };
 
     window.addEventListener('mousedown', (e) => {
       isDragging = true;
@@ -256,63 +319,85 @@
     });
 
     window.addEventListener('mousemove', (e) => {
+      const dx = e.clientX - prevMouse.x;
+      const dy = e.clientY - prevMouse.y;
+      
       if (isDragging) {
-        const deltaX = e.clientX - prevMouse.x;
-        const deltaY = e.clientY - prevMouse.y;
-        
-        mesh.rotation.y += deltaX * 0.008;
-        mesh.rotation.x += deltaY * 0.008;
-
-        rotationVelocity.y = deltaX * 0.004;
-        rotationVelocity.x = deltaY * 0.004;
-
+        mesh.rotation.y += dx * 0.007;
+        mesh.rotation.x += dy * 0.007;
+        mouseDelta.x = dx * 0.004;
+        mouseDelta.y = dy * 0.004;
         prevMouse = { x: e.clientX, y: e.clientY };
       }
+      
+      // Dynamic light tracking with cursor
+      keyLight.position.x = (e.clientX / window.innerWidth - 0.5) * 10 + 4;
+      keyLight.position.y = -(e.clientY / window.innerHeight - 0.5) * 10 + 4;
     });
 
     window.addEventListener('mouseup', () => { isDragging = false; });
 
-    // Touch support for mobile
+    // Touch Support
     window.addEventListener('touchstart', (e) => {
       isDragging = true;
       prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     });
     window.addEventListener('touchmove', (e) => {
       if (isDragging) {
-        const deltaX = e.touches[0].clientX - prevMouse.x;
-        const deltaY = e.touches[0].clientY - prevMouse.y;
-        mesh.rotation.y += deltaX * 0.008;
-        mesh.rotation.x += deltaY * 0.008;
+        const dx = e.touches[0].clientX - prevMouse.x;
+        const dy = e.touches[0].clientY - prevMouse.y;
+        mesh.rotation.y += dx * 0.007;
+        mesh.rotation.x += dy * 0.007;
         prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
     });
     window.addEventListener('touchend', () => { isDragging = false; });
 
-    // Window Resize
+    // Resize Handler
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      updateMeshPosition();
+      alignMesh();
     });
 
-    // 60FPS Render Loop
-    function animate() {
-      requestAnimationFrame(animate);
+    // Clock & Wave Physics Loop
+    const clock = new THREE.Clock();
 
+    function renderFrame() {
+      requestAnimationFrame(renderFrame);
+      const time = clock.getElapsedTime() * 1.5;
+
+      // Real-time procedural liquid surface wave calculation
+      for (let i = 0; i < vertexCount; i++) {
+        const uX = originalPositions.getX(i);
+        const uY = originalPositions.getY(i);
+        const uZ = originalPositions.getZ(i);
+
+        // Sinusoidal wave ripple
+        const displacement = Math.sin(uX * 2.5 + time) * 
+                             Math.cos(uY * 2.5 + time) * 
+                             Math.sin(uZ * 2.5 + time) * 0.12;
+
+        posAttr.setXYZ(
+          i,
+          uX + (uX * displacement),
+          uY + (uY * displacement),
+          uZ + (uZ * displacement)
+        );
+      }
+      posAttr.needsUpdate = true;
+      geometry.computeVertexNormals();
+
+      // Idle Rotation Inertia
       if (!isDragging) {
-        // Subtle inertia spin
-        mesh.rotation.x += rotationVelocity.x;
-        mesh.rotation.y += rotationVelocity.y;
-        
-        // Dampen back to idle speed
-        rotationVelocity.x += (0.002 - rotationVelocity.x) * 0.02;
-        rotationVelocity.y += (0.004 - rotationVelocity.y) * 0.02;
+        mesh.rotation.y += 0.003;
+        mesh.rotation.x += 0.0015;
       }
 
       renderer.render(scene, camera);
     }
-    animate();
+    renderFrame();
   </script>
 </body>
 </html>
