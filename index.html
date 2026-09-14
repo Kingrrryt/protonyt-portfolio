@@ -3,167 +3,207 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ProtonYT | Security Researcher & Systems Engineer</title>
+  <title>ProtonYT | Cybernetic Systems Architect | Reverse Engineering</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Space Grotesk', sans-serif; }
+    body { font-family: 'Space Grotesk', sans-serif; cursor: none; }
     .mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* 3D Container */
     #canvas-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: -1;
-      pointer-events: none;
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: -1; pointer-events: none;
     }
-    .glow-card {
-      background: rgba(15, 23, 42, 0.65);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(6, 182, 212, 0.2);
-      transition: all 0.3s ease;
+
+    /* Modern Scrollbar - Cyberpunk theme */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { bg: #010409; }
+    ::-webkit-scrollbar-thumb { bg: #06b6d4; border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { bg: #38bdf8; }
+
+    /* Glassmorphism Cards - Terminal Style */
+    .cyber-card {
+      background: rgba(1, 4, 9, 0.5);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(6, 182, 212, 0.15);
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
     }
-    .glow-card:hover {
-      border-color: rgba(6, 182, 212, 0.6);
-      box-shadow: 0 0 25px rgba(6, 182, 212, 0.2);
-      transform: translateY(-4px);
+    .cyber-card::before {
+      content: ''; position: absolute; top: -1px; left: -1px; width: 10px; height: 10px;
+      border-top: 2px solid rgba(6, 182, 212, 0.5); border-left: 2px solid rgba(6, 182, 212, 0.5);
     }
+    .cyber-card::after {
+      content: ''; position: absolute; bottom: -1px; right: -1px; width: 10px; height: 10px;
+      border-bottom: 2px solid rgba(6, 182, 212, 0.5); border-right: 2px solid rgba(6, 182, 212, 0.5);
+    }
+    .cyber-card:hover {
+      border-color: rgba(6, 182, 212, 0.7);
+      box-shadow: 0 0 35px rgba(6, 182, 212, 0.3);
+      transform: translateY(-8px) scale(1.02);
+    }
+
+    /* Custom Cursor Ripple Effect */
+    #cursor-ripple {
+      position: fixed; top: 0; left: 0; width: 40px; height: 40px;
+      border: 1px solid #06b6d4; border-radius: 50%;
+      pointer-events: none; z-index: 999;
+      opacity: 0; transition: opacity 0.1s;
+    }
+    #cursor-inner {
+      position: fixed; top: 0; left: 0; width: 6px; height: 6px;
+      background: #06b6d4; border-radius: 50%;
+      pointer-events: none; z-index: 1000;
+      opacity: 0; transition: opacity 0.1s;
+    }
+
+    /* Neon Text Effect */
+    .neon-text { text-shadow: 0 0 10px rgba(6, 182, 212, 0.7), 0 0 20px rgba(6, 182, 212, 0.5); }
+    
+    /* Reveal Animation class */
+    .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s ease-out; }
+    .reveal.active { opacity: 1; transform: translateY(0px); }
   </style>
 </head>
-<body class="bg-[#030712] text-slate-100 min-h-screen selection:bg-cyan-500 selection:text-black overflow-x-hidden">
+<body class="bg-[#010409] text-slate-100 min-h-screen selection:bg-cyan-500 selection:text-black overflow-x-hidden">
+
+  <!-- Custom Cursor Elements -->
+  <div id="cursor-ripple"></div>
+  <div id="cursor-inner"></div>
 
   <!-- 3D Canvas Background -->
   <div id="canvas-container"></div>
 
   <!-- Navbar -->
-  <header class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[#030712]/80 border-b border-cyan-950/40">
-    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
-        <span class="mono text-sm tracking-widest font-bold uppercase text-white">
-          Proton<span class="text-cyan-400">YT</span>
+  <header class="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-[#010409]/70 border-b border-cyan-950/20">
+    <div class="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-2 h-10 bg-cyan-400"></div>
+        <span class="mono text-lg tracking-wider font-bold uppercase text-white">
+          P<span class="text-cyan-400">ROTON</span>YT.CORE
         </span>
       </div>
-      <nav class="hidden md:flex space-x-8 mono text-xs uppercase text-slate-400">
-        <a href="#about" class="hover:text-cyan-400 transition">About</a>
-        <a href="#skills" class="hover:text-cyan-400 transition">Arsenal</a>
-        <a href="#projects" class="hover:text-cyan-400 transition">Projects</a>
+      <nav class="hidden md:flex space-x-10 mono text-sm uppercase text-slate-400 tracking-wider">
+        <a href="#about" class="hover:text-cyan-400 transition hover:neon-text">About</a>
+        <a href="#skills" class="hover:text-cyan-400 transition hover:neon-text">Arsenal</a>
+        <a href="#projects" class="hover:text-cyan-400 transition hover:neon-text">Builds</a>
       </nav>
-      <a href="mailto:contact@goonit.sbs" class="mono text-xs px-4 py-1.5 rounded-full border border-cyan-500/40 bg-cyan-950/30 text-cyan-300 hover:bg-cyan-500 hover:text-black transition">
-        Terminal
+      <a href="mailto:contact@goonit.sbs" class="mono text-xs px-5 py-2 rounded-full border border-cyan-500/30 bg-cyan-950/20 text-cyan-300 hover:bg-cyan-500 hover:text-black transition hover:shadow-cyan-500/40 hover:shadow-lg">
+        INITIALIZE
       </a>
     </div>
   </header>
 
   <!-- Hero Section -->
-  <section class="min-h-screen flex items-center justify-center pt-20 px-6">
-    <div class="max-w-3xl text-center z-10">
-      <div class="inline-block mono text-xs px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-950/40 text-cyan-400 mb-6">
-        ● LIVE MATRIX OPERATIONAL
+  <section class="min-h-screen flex items-center pt-24 px-6 md:px-12">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12 z-10 items-center">
+      <div class="md:col-span-8">
+        <div class="inline-block mono text-xs px-4 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-950/30 text-cyan-400 mb-8 tracking-widest">
+          SYSTEM_ACCESS::AUTHORIZATION_COMPLETE
+        </div>
+        <h1 class="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-tight text-white reveal">
+          Dissecting <span class="bg-gradient-to-r from-cyan-300 via-cyan-500 to-sky-600 bg-clip-text text-transparent">Complex Systems</span>.<br />
+          Engineering Hardened Core Architecture.
+        </h1>
+        <p class="text-slate-400 text-base md:text-xl mb-12 max-w-2xl leading-relaxed reveal">
+          Specialized in Reverse Engineering, Memory Diagnostics, Low-level Hooking Frameworks, and developing highly secure software environments at GoonIT SBS.
+        </p>
+        <div class="flex items-center gap-6 reveal">
+          <a href="#projects" class="px-8 py-4 rounded-lg bg-cyan-500 text-black font-bold text-sm hover:bg-cyan-400 transition hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105">
+            LOAD PORTFOLIO_MANIFEST
+          </a>
+          <a href="https://github.com" target="_blank" class="px-8 py-4 rounded-lg border border-slate-800 bg-slate-900/60 text-sm font-semibold hover:border-cyan-500/50 hover:text-cyan-300 transition hover:neon-text">
+            OPEN_REPOS
+          </a>
+        </div>
       </div>
-      <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
-        Reverse Engineering & <br />
-        <span class="bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-500 bg-clip-text text-transparent">
-          Cyber Architecture
-        </span>
-      </h1>
-      <p class="text-slate-400 text-base md:text-lg mb-8 max-w-xl mx-auto leading-relaxed">
-        Specializing in low-level memory introspection, systems security, and high-performance software development.
-      </p>
-      <div class="flex items-center justify-center gap-4">
-        <a href="#projects" class="px-6 py-3 rounded-lg bg-cyan-500 text-black font-semibold text-sm hover:bg-cyan-400 transition shadow-[0_0_20px_rgba(6,182,212,0.4)]">
-          Explore Builds
-        </a>
-        <a href="https://github.com" target="_blank" class="px-6 py-3 rounded-lg border border-slate-800 bg-slate-900/60 text-sm font-medium hover:border-slate-700 hover:text-cyan-300 transition">
-          GitHub Repos
-        </a>
+      <div class="md:col-span-4 hidden md:block reveal">
+          <!-- Can put a custom stylized photo/asset here later -->
       </div>
     </div>
   </section>
 
   <!-- Technical Arsenal -->
-  <section id="skills" class="py-24 px-6 border-t border-slate-900 bg-slate-950/50">
-    <div class="max-w-5xl mx-auto">
-      <div class="mb-12">
-        <span class="mono text-xs text-cyan-400 uppercase tracking-widest block mb-1">// Core Capabilities</span>
-        <h2 class="text-3xl font-bold">Technical Arsenal</h2>
+  <section id="skills" class="py-32 px-6 md:px-12 border-t border-slate-900 bg-slate-950/30 backdrop-blur-lg">
+    <div class="max-w-7xl mx-auto">
+      <div class="mb-20 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+        <div>
+          <span class="mono text-xs text-cyan-400 uppercase tracking-widest block mb-1 hover:neon-text">// Capabilities</span>
+          <h2 class="text-5xl font-black tracking-tighter text-white">SYSTEMS_ARSENAL</h2>
+        </div>
+        <div class="text-sm text-slate-400 max-w-lg leading-relaxed md:ml-auto">
+          Expertise spanning vulnerability vector identification to secure cloud architecture. Operationalizing core systems diagnostics.
+        </div>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="glow-card p-6 rounded-xl">
-          <div class="flex justify-between items-center mb-2">
-            <h3 class="font-bold text-lg text-white">Reverse Engineering</h3>
-            <span class="mono text-[11px] text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-2 py-0.5 rounded">Specialized</span>
-          </div>
-          <p class="text-slate-400 text-sm">Binary disassembly, hooking internals, memory patching, and run-time inspection.</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="cyber-card p-8 rounded-lg reveal">
+          <h3 class="font-bold text-2xl text-white mb-3 hover:neon-text">Reverse Engineering</h3>
+          <p class="text-slate-400 text-sm leading-relaxed mb-6">Binary analysis, static/dynamic disassembly, memory reconstruction, and patching.</p>
+          <span class="mono text-[11px] text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-3 py-1 rounded">DEEP_DIAGNOSTICS</span>
         </div>
-        <div class="glow-card p-6 rounded-xl">
-          <div class="flex justify-between items-center mb-2">
-            <h3 class="font-bold text-lg text-white">Cybersecurity & Pentesting</h3>
-            <span class="mono text-[11px] text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-2 py-0.5 rounded">Defensive/Offensive</span>
-          </div>
-          <p class="text-slate-400 text-sm">Vulnerability assessment, exploit vector diagnostics, and hardened perimeter design.</p>
+        <div class="cyber-card p-8 rounded-lg reveal">
+          <h3 class="font-bold text-2xl text-white mb-3 hover:neon-text">Cybersec Audit</h3>
+          <p class="text-slate-400 text-sm leading-relaxed mb-6">Penetration diagnostics, vector vulnerability mapping, and threat mitigation design.</p>
+          <span class="mono text-[11px] text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-3 py-1 rounded">VECT_ANALYSIS</span>
         </div>
-        <div class="glow-card p-6 rounded-xl">
-          <div class="flex justify-between items-center mb-2">
-            <h3 class="font-bold text-lg text-white">Low-Level Systems</h3>
-            <span class="mono text-[11px] text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-2 py-0.5 rounded">Core</span>
-          </div>
-          <p class="text-slate-400 text-sm">C/C++ architecture, pointer kinematics, dynamic libraries, and system call tracing.</p>
+        <div class="cyber-card p-8 rounded-lg reveal">
+          <h3 class="font-bold text-2xl text-white mb-3 hover:neon-text">Low-Level Systems</h3>
+          <p class="text-slate-400 text-sm leading-relaxed mb-6">C/C++ framework architecture, dynamic library hooking, and syscall tracing.</p>
+          <span class="mono text-[11px] text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-3 py-1 rounded">CORE_HOOKS</span>
         </div>
-        <div class="glow-card p-6 rounded-xl">
-          <div class="flex justify-between items-center mb-2">
-            <h3 class="font-bold text-lg text-white">Modern Web Infrastructure</h3>
-            <span class="mono text-[11px] text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-2 py-0.5 rounded">Full-Stack</span>
-          </div>
-          <p class="text-slate-400 text-sm">Scalable edge deployment, Next.js / cloud services, and hardened API gatekeeping.</p>
+        <div class="cyber-card p-8 rounded-lg reveal">
+          <h3 class="font-bold text-2xl text-white mb-3 hover:neon-text">Full-Stack Cloud</h3>
+          <p class="text-slate-400 text-sm leading-relaxed mb-6">Scalable microservices, Next.js / serverless functions, and hardened API pipelines.</p>
+          <span class="mono text-[11px] text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-3 py-1 rounded">EDGE_NETWORKS</span>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Projects Showcase -->
-  <section id="projects" class="py-24 px-6">
-    <div class="max-w-5xl mx-auto">
-      <div class="mb-12">
-        <span class="mono text-xs text-cyan-400 uppercase tracking-widest block mb-1">// Selected Builds</span>
-        <h2 class="text-3xl font-bold">Featured Projects</h2>
+  <section id="projects" class="py-32 px-6 md:px-12">
+    <div class="max-w-7xl mx-auto">
+      <div class="mb-20 text-center max-w-2xl mx-auto">
+        <span class="mono text-xs text-cyan-400 uppercase tracking-widest block mb-1 hover:neon-text">// Build Manifest</span>
+        <h2 class="text-5xl font-black tracking-tighter text-white">Featured Projects</h2>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="glow-card p-6 rounded-xl flex flex-col justify-between">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="cyber-card p-8 rounded-lg flex flex-col justify-between reveal">
           <div>
-            <span class="mono text-[10px] text-cyan-400 uppercase tracking-wider block mb-2">Systems Engineering</span>
-            <h3 class="text-lg font-bold mb-2">V-Hook Runtime Engine</h3>
-            <p class="text-slate-400 text-sm mb-4">Memory interception system leveraging VTable shadowing techniques.</p>
+            <span class="mono text-[10px] text-cyan-400 uppercase tracking-wider block mb-2">/ Low-Level Engine</span>
+            <h3 class="text-2xl font-bold mb-3 text-white">V-Hook Runtime</h3>
+            <p class="text-slate-400 text-sm mb-6 leading-relaxed">Highly efficient runtime memory interception system leveraging lightweight VTable shadowing.</p>
           </div>
-          <div class="flex gap-2 mono text-[10px] text-cyan-300">
-            <span class="bg-slate-800 px-2 py-1 rounded">C++</span>
-            <span class="bg-slate-800 px-2 py-1 rounded">Assembly</span>
+          <div class="flex gap-2.5 mono text-[10px] text-cyan-300">
+            <span class="bg-slate-900 border border-cyan-900 px-3 py-1.5 rounded">C++</span>
+            <span class="bg-slate-900 border border-cyan-900 px-3 py-1.5 rounded">Asm (x64)</span>
           </div>
         </div>
-        <div class="glow-card p-6 rounded-xl flex flex-col justify-between">
+        <div class="cyber-card p-8 rounded-lg flex flex-col justify-between reveal">
           <div>
-            <span class="mono text-[10px] text-cyan-400 uppercase tracking-wider block mb-2">Security Automation</span>
-            <h3 class="text-lg font-bold mb-2">Autonomous Recon Suite</h3>
-            <p class="text-slate-400 text-sm mb-4">Asynchronous multi-target network vulnerability discovery engine.</p>
+            <span class="mono text-[10px] text-cyan-400 uppercase tracking-wider block mb-2">/ Automation Suite</span>
+            <h3 class="text-2xl font-bold mb-3 text-white">Autonomous Recon</h3>
+            <p class="text-slate-400 text-sm mb-6 leading-relaxed">Asynchronous multi-target vulnerability discovery engine with dynamic attack path mapping.</p>
           </div>
-          <div class="flex gap-2 mono text-[10px] text-cyan-300">
-            <span class="bg-slate-800 px-2 py-1 rounded">Python</span>
-            <span class="bg-slate-800 px-2 py-1 rounded">AsyncIO</span>
+          <div class="flex gap-2.5 mono text-[10px] text-cyan-300">
+            <span class="bg-slate-900 border border-cyan-900 px-3 py-1.5 rounded">Python</span>
+            <span class="bg-slate-900 border border-cyan-900 px-3 py-1.5 rounded">Raw_Sockets</span>
           </div>
         </div>
-        <div class="glow-card p-6 rounded-xl flex flex-col justify-between">
+        <div class="cyber-card p-8 rounded-lg flex flex-col justify-between reveal">
           <div>
-            <span class="mono text-[10px] text-cyan-400 uppercase tracking-wider block mb-2">Cloud Core</span>
-            <h3 class="text-lg font-bold mb-2">ProtonCore Module</h3>
-            <p class="text-slate-400 text-sm mb-4">Hardened micro-framework built for sub-millisecond cloud pipelines.</p>
+            <span class="mono text-[10px] text-cyan-400 uppercase tracking-wider block mb-2">/ Infrastructure Module</span>
+            <h3 class="text-2xl font-bold mb-3 text-white">ProtonCore Module</h3>
+            <p class="text-slate-400 text-sm mb-6 leading-relaxed">Modular high-performance TypeScript micro-framework for sub-millisecond data pipelines.</p>
           </div>
-          <div class="flex gap-2 mono text-[10px] text-cyan-300">
-            <span class="bg-slate-800 px-2 py-1 rounded">TypeScript</span>
-            <span class="bg-slate-800 px-2 py-1 rounded">Edge</span>
+          <div class="flex gap-2.5 mono text-[10px] text-cyan-300">
+            <span class="bg-slate-900 border border-cyan-900 px-3 py-1.5 rounded">TS / NextJS</span>
+            <span class="bg-slate-900 border border-cyan-900 px-3 py-1.5 rounded">Secure Edge</span>
           </div>
         </div>
       </div>
@@ -171,73 +211,121 @@
   </section>
 
   <!-- Footer -->
-  <footer class="py-12 border-t border-slate-900 mono text-xs text-center text-slate-500">
-    <p>© 2026 ProtonYT. Domain: goonit.sbs. All systems operational.</p>
+  <footer class="py-16 border-t border-slate-900 bg-slate-950/50 backdrop-blur-lg mono text-center text-slate-600">
+    <p class="text-xs tracking-widest">© 2026 PROTONYT.CORE | AUTHORIZED_ACCESS_ONLY | goonit.sbs | <span class="w-1.5 h-1.5 rounded-full bg-cyan-600 inline-block animate-pulse ml-1"></span></p>
   </footer>
 
-  <!-- Interactive 3D Background Script -->
+  <!-- 3D & Interaction Engine -->
   <script>
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    // 3D Wireframe Icosahedron Core
-    const geometry = new THREE.IcosahedronGeometry(2.4, 2);
-    const material = new THREE.MeshBasicMaterial({ 
-      color: 0x06b6d4, 
-      wireframe: true, 
-      transparent: true, 
-      opacity: 0.28 
+    // Dynamic Grid Plane
+    const gridGeometry = new THREE.PlaneBufferGeometry(80, 80, 80, 80);
+    const gridMaterial = new THREE.ShaderMaterial({
+      transparent: true, opacity: 0.15,
+      uniforms: {
+        color: { value: new THREE.Color(0x06b6d4) },
+        time: { value: 0 },
+        ripplePosition: { value: new THREE.Vector2(0, 0) }
+      },
+      vertexShader: `
+        uniform float time;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          vec3 pos = position;
+          pos.z += sin(pos.x * 0.2 + time * 0.5) * 0.4;
+          pos.z += cos(pos.y * 0.2 + time * 0.5) * 0.4;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 color;
+        varying vec2 vUv;
+        void main() {
+          if(vUv.x < 0.02 || vUv.y < 0.02 || vUv.x > 0.98 || vUv.y > 0.98) {
+            gl_FragColor = vec4(color, 0.5);
+          } else {
+            gl_FragColor = vec4(color, 0.0);
+          }
+        }
+      `,
+      wireframe: true
     });
-    const icosahedron = new THREE.Mesh(geometry, material);
-    scene.add(icosahedron);
+    const gridMesh = new THREE.Mesh(gridGeometry, gridMaterial);
+    gridMesh.rotation.x = -Math.PI / 2;
+    gridMesh.position.y = -6;
+    scene.add(gridMesh);
 
-    // Floating Particles Field
-    const particlesCount = 200;
-    const posArray = new Float32Array(particlesCount * 3);
-    for(let i = 0; i < particlesCount * 3; i++) {
-      posArray[i] = (Math.random() - 0.5) * 15;
+    // Floating Moving Light Orbs
+    const lightGeometry = new THREE.SphereBufferGeometry(0.1, 16, 16);
+    const lightMaterial = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 });
+    const movingLights = [];
+    for(let i = 0; i < 4; i++) {
+        const lightMesh = new THREE.Mesh(lightGeometry, lightMaterial);
+        lightMesh.position.set((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 20);
+        scene.add(lightMesh);
+        movingLights.push({mesh: lightMesh, vx: Math.random() * 0.1 - 0.05, vy: Math.random() * 0.1 - 0.05, vz: Math.random() * 0.1 - 0.05});
     }
-    const particlesGeo = new THREE.BufferGeometry();
-    particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-    const particlesMat = new THREE.PointsMaterial({
-      size: 0.035,
-      color: 0x38bdf8,
-      transparent: true,
-      opacity: 0.6
-    });
-    const particlesMesh = new THREE.Points(particlesGeo, particlesMat);
-    scene.add(particlesMesh);
 
-    camera.position.z = 4.5;
+    camera.position.z = 18;
 
-    // Mouse Tracking Animation
+    // Interaction & Animation
     let mouseX = 0, mouseY = 0;
+    const ripple = document.getElementById('cursor-ripple');
+    const innerCursor = document.getElementById('cursor-inner');
+
     window.addEventListener('mousemove', (e) => {
-      mouseX = (e.clientX / window.innerWidth - 0.5) * 0.4;
-      mouseY = (e.clientY / window.innerHeight - 0.5) * 0.4;
+      mouseX = (e.clientX / window.innerWidth - 0.5) * 0.15;
+      mouseY = (e.clientY / window.innerHeight - 0.5) * 0.15;
+      
+      // Update custom cursor
+      ripple.style.transform = `translate(${e.clientX - 20}px, ${e.clientY - 20}px)`;
+      innerCursor.style.transform = `translate(${e.clientX - 3}px, ${e.clientY - 3}px)`;
+      ripple.style.opacity = '1'; innerCursor.style.opacity = '1';
     });
 
-    // Resize Handler
     window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
+      camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
+    // Intersection Observer for Reveal Animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Smooth Scroll Integration (Browser level, no smooth-scroll.js)
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
     // Animation Loop
+    let clock = new THREE.Clock();
     function animate() {
       requestAnimationFrame(animate);
-      icosahedron.rotation.x += 0.002;
-      icosahedron.rotation.y += 0.003;
-
-      particlesMesh.rotation.y -= 0.0008;
+      let t = clock.getElapsedTime();
+      gridMaterial.uniforms.time.value = t;
 
       camera.position.x += (mouseX - camera.position.x) * 0.05;
       camera.position.y += (-mouseY - camera.position.y) * 0.05;
-      camera.lookAt(scene.position);
+      camera.lookAt(new THREE.Vector3(0, -3, 0));
+
+      movingLights.forEach(light => {
+          light.mesh.position.x += light.vx; light.mesh.position.y += light.vy; light.mesh.position.z += light.vz;
+          if (light.mesh.position.x > 20 || light.mesh.position.x < -20) light.vx *= -1;
+          if (light.mesh.position.y > 10 || light.mesh.position.y < -10) light.vy *= -1;
+          if (light.mesh.position.z > 20 || light.mesh.position.z < -20) light.vz *= -1;
+      });
 
       renderer.render(scene, camera);
     }
