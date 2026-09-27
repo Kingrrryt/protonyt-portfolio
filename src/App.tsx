@@ -400,10 +400,10 @@ function Works() {
               key={i}
               className={`work-card group relative rounded-[24px] md:rounded-[28px] overflow-hidden bg-surface border border-white/[0.06] ${p.span} min-h-[420px] md:min-h-[520px]`}
               whileHover={{ y: -4 }}
-              transition={{ duration: 0.4, ease: [0.76, 0, 0.24, 1] }}
+              transition={{ duration: 0.4, ease: [0.76, 0, 0.24, 1] as any }}
             >
               <div className="absolute inset-0">
-                <img src={p.img} alt={p.title} className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-[1.2s] ease-[cubic-bezier(0.76,0,0.24,1)]" />
+                <img src={p.img} alt={p.title} className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-1000 ease-out" />
                 <div className={`absolute inset-0 bg-gradient-to-t from-bg via-bg/40 to-transparent opacity-90`} />
                 <div className={`absolute inset-0 bg-gradient-to-br ${p.accent} opacity-60 mix-blend-overlay`} />
                 <div className="absolute inset-0 halftone opacity-[0.15] group-hover:opacity-[0.25] transition-opacity" />
